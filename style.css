@@ -26,15 +26,20 @@ body {
     position: fixed;
     bottom: 0;
     right: 20px; 
-    width: 350px;
-    height: 500px;
-    /* Link direto para uma imagem do Astolfo na internet */
-    background-image: url('https://i.pinimg.com/originals/f5/44/29/f544290b5eb1ff69cf7e1f79f69b6835.png'); 
+    width: 380px; /* Tamanho da imagem */
+    height: 550px;
+    
+    /* Nome exato da imagem que você subiu no GitHub */
+    background-image: url('astolfo.png'); 
+    
     background-size: contain;
     background-repeat: no-repeat;
     background-position: bottom right;
     
-    z-index: 1; 
+    /* O TRUQUE MÁGICO: Remove o fundo branco da imagem */
+    mix-blend-mode: multiply;
+    
+    z-index: 1; /* Fica atrás do boletim */
     pointer-events: none; 
     opacity: 0.9;
     
@@ -58,7 +63,7 @@ body {
     height: 100%;
     pointer-events: none;
     overflow: hidden;
-    z-index: 0; 
+    z-index: 0; /* Fica atrás de tudo */
 }
 
 .sakura {
@@ -229,32 +234,12 @@ header h1 {
     transition: background 0.2s;
 }
 
-#btn-alterar {
-    background: #ff8fab;
-    color: #ffffff;
-}
-
-#btn-alterar:hover {
-    background: #d6336c;
-}
-
-#btn-salvar {
-    background: #38b000;
-    color: #ffffff;
-}
-
-#btn-salvar:hover {
-    background: #2d8a00;
-}
-
-#btn-cancelar {
-    background: #dddddd;
-    color: #4a2c3a;
-}
-
-#btn-cancelar:hover {
-    background: #bbbbbb;
-}
+#btn-alterar { background: #ff8fab; color: #ffffff; }
+#btn-alterar:hover { background: #d6336c; }
+#btn-salvar { background: #38b000; color: #ffffff; }
+#btn-salvar:hover { background: #2d8a00; }
+#btn-cancelar { background: #dddddd; color: #4a2c3a; }
+#btn-cancelar:hover { background: #bbbbbb; }
 
 .mensagem-edicao {
     font-size: 0.85rem;
@@ -332,9 +317,7 @@ table {
     min-width: 750px;
 }
 
-thead {
-    background: #ff8fab;
-}
+thead { background: #ff8fab; }
 
 th {
     padding: 14px 10px;
@@ -361,13 +344,8 @@ td:first-child {
     color: #d6336c;
 }
 
-tbody tr:nth-child(even) {
-    background: #fff5f8;
-}
-
-tbody tr:hover {
-    background: #ffe0e8;
-}
+tbody tr:nth-child(even) { background: #fff5f8; }
+tbody tr:hover { background: #ffe0e8; }
 
 td input {
     width: 60px;
@@ -380,35 +358,13 @@ td input {
     outline: none;
 }
 
-td input:focus {
-    border-color: #ff8fab;
-}
+td input:focus { border-color: #ff8fab; }
+td input.invalido { border-color: #e63946; background: #ffe0e0; }
 
-td input.invalido {
-    border-color: #e63946;
-    background: #ffe0e0;
-}
-
-.situacao-bom {
-    color: #38b000;
-    font-weight: 600;
-}
-
-.situacao-atencao {
-    color: #e63946;
-    font-weight: 600;
-}
-
-.situacao-sem-nota {
-    color: #999999;
-    font-style: italic;
-}
-
-.nota-ausente {
-    color: #bbbbbb;
-    font-style: italic;
-    font-size: 0.85rem;
-}
+.situacao-bom { color: #38b000; font-weight: 600; }
+.situacao-atencao { color: #e63946; font-weight: 600; }
+.situacao-sem-nota { color: #999999; font-style: italic; }
+.nota-ausente { color: #bbbbbb; font-style: italic; font-size: 0.85rem; }
 
 /* =========================================
    RESPONSIVIDADE (CELULAR)
@@ -427,8 +383,8 @@ td input.invalido {
     td input { width: 50px; font-size: 0.75rem; }
     
     .personagem-fundo {
-        width: 200px;
-        height: 300px;
-        opacity: 0.3;
+        width: 250px;
+        height: 350px;
+        opacity: 0.4;
     }
 }
