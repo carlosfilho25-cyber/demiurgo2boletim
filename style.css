@@ -1,0 +1,205 @@
+/* =========================================
+   ESTILO ROSA CLEAN - BOLETIM DIGITAL
+   ========================================= */
+
+/* Fonte moderna e legível */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #fff5f8; /* Fundo rosa bem clarinho */
+    color: #4a2c3a; /* Texto escuro com tom rosado */
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* =========================================
+   CABEÇALHO
+   ========================================= */
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 30px 20px;
+    background: linear-gradient(135deg, #ffb6c1 0%, #ff8fab 100%);
+    border-radius: 20px;
+    box-shadow: 0 8px 20px rgba(255, 143, 171, 0.3);
+}
+
+header h1 {
+    font-size: 2.5rem;
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.subtitulo {
+    font-size: 1.1rem;
+    color: #ffffff;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+/* =========================================
+   CARDS DE RESUMO
+   ========================================= */
+.cards-resumo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 20px 15px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(255, 143, 171, 0.2);
+    border: 2px solid #ffe0e8;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(255, 143, 171, 0.35);
+}
+
+.card h3 {
+    font-size: 0.85rem;
+    color: #d6336c;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.card p {
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: #ff8fab;
+}
+
+.status-frequencia {
+    display: block;
+    font-size: 0.75rem;
+    color: #38b000;
+    font-weight: 600;
+    margin-top: 6px;
+}
+
+/* =========================================
+   TABELA
+   ========================================= */
+.tabela-container {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(255, 143, 171, 0.2);
+    overflow-x: auto;
+    border: 2px solid #ffe0e8;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px;
+}
+
+thead {
+    background: #ff8fab;
+}
+
+th {
+    padding: 14px 10px;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+td {
+    padding: 12px 10px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #4a2c3a;
+    border-bottom: 1px solid #ffe0e8;
+}
+
+td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: #d6336c;
+}
+
+tbody tr:nth-child(even) {
+    background: #fff5f8;
+}
+
+tbody tr:hover {
+    background: #ffe0e8;
+}
+
+.situacao-bom {
+    color: #38b000;
+    font-weight: 600;
+}
+
+.situacao-atencao {
+    color: #e63946;
+    font-weight: 600;
+}
+
+.situacao-sem-nota {
+    color: #999999;
+    font-style: italic;
+}
+
+.nota-ausente {
+    color: #bbbbbb;
+    font-style: italic;
+    font-size: 0.85rem;
+}
+
+/* =========================================
+   RESPONSIVIDADE (CELULAR)
+   ========================================= */
+@media (max-width: 600px) {
+    body {
+        padding: 12px;
+    }
+
+    header {
+        padding: 20px 15px;
+    }
+
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    .subtitulo {
+        font-size: 0.95rem;
+    }
+
+    .cards-resumo {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+    }
+
+    .card p {
+        font-size: 1.5rem;
+    }
+
+    th, td {
+        padding: 10px 8px;
+        font-size: 0.8rem;
+    }
+}

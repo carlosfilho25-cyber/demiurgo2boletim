@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boletim Digital</title>
+    <!-- Link para o arquivo CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Cabeçalho do site -->
+    <header>
+        <h1>Boletim Digital</h1>
+        <p class="subtitulo">9º Ano - Estudante Exemplo</p>
+    </header>
+
+    <main>
+        <!-- Área dos Cards de Resumo -->
+        <section class="cards-resumo">
+            <div class="card">
+                <h3>Média Geral</h3>
+                <p id="card-media-geral">--</p>
+            </div>
+            <div class="card">
+                <h3>Total de Faltas</h3>
+                <p id="card-total-faltas">--</p>
+            </div>
+            <div class="card">
+                <h3>Bom Desempenho</h3>
+                <p id="card-bom-desempenho">--</p>
+            </div>
+            <div class="card">
+                <h3>Precisa de Atenção</h3>
+                <p id="card-atencao">--</p>
+            </div>
+            <div class="card">
+                <h3>Frequência</h3>
+                <p id="card-frequencia">--</p>
+                <span class="status-frequencia">Frequência adequada</span>
+            </div>
+        </section>
+
+        <!-- Área da Tabela -->
+        <section class="tabela-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Disciplina</th>
+                        <th>1º Tri</th>
+                        <th>2º Tri</th>
+                        <th>3º Tri</th>
+                        <th>Média</th>
+                        <th>Faltas</th>
+                        <th>Situação</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-tabela">
+                    <!-- O JavaScript vai preencher as linhas aqui automaticamente -->
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Link para o arquivo JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
