@@ -2,7 +2,6 @@
    ESTILO ROSA CLEAN - BOLETIM DIGITAL
    ========================================= */
 
-/* Fonte moderna e legível */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
 
 * {
@@ -12,12 +11,45 @@
 }
 
 body {
-    background-color: #fff5f8; /* Fundo rosa bem clarinho */
-    color: #4a2c3a; /* Texto escuro com tom rosado */
+    background-color: #fff5f8;
+    color: #4a2c3a;
     font-family: 'Poppins', sans-serif;
     min-height: 100vh;
     padding: 20px;
-    position: relative; /* Necessário para o sakura-container */
+    position: relative;
+}
+
+/* =========================================
+   FOLHAS DE SAKURA
+   ========================================= */
+.sakura-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.sakura {
+    position: absolute;
+    top: -10%;
+    background: radial-gradient(circle at 30% 30%, #ffd6e0, #ff8fab);
+    border-radius: 50% 0 50% 50%;
+    opacity: 0.8;
+    animation-name: cairSakura;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+@keyframes cairSakura {
+    0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.9; }
+    50% { transform: translateY(50vh) translateX(30px) rotate(180deg); }
+    90% { opacity: 0.9; }
+    100% { transform: translateY(110vh) translateX(-30px) rotate(360deg); opacity: 0; }
 }
 
 /* =========================================
@@ -31,7 +63,7 @@ header {
     border-radius: 20px;
     box-shadow: 0 8px 20px rgba(255, 143, 171, 0.3);
     position: relative;
-    z-index: 1; /* Fica acima das folhas */
+    z-index: 2;
 }
 
 header h1 {
@@ -50,6 +82,160 @@ header h1 {
 }
 
 /* =========================================
+   TELA DE ACESSO (PIN)
+   ========================================= */
+.acesso-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+.acesso-box {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(255, 143, 171, 0.3);
+    border: 2px solid #ffe0e8;
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+
+.acesso-box h2 {
+    color: #d6336c;
+    font-size: 1.3rem;
+    margin-bottom: 10px;
+}
+
+.acesso-info {
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 20px;
+}
+
+.acesso-campo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.acesso-campo label {
+    font-size: 0.9rem;
+    color: #d6336c;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.acesso-campo input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ffe0e8;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.acesso-campo input:focus {
+    border-color: #ff8fab;
+}
+
+#btn-entrar {
+    background: #ff8fab;
+    color: #ffffff;
+    border: none;
+    padding: 12px 40px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#btn-entrar:hover {
+    background: #d6336c;
+}
+
+.mensagem-acesso {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: #e63946;
+    min-height: 20px;
+}
+
+/* =========================================
+   CONTEÚDO DO BOLETIM
+   ========================================= */
+.escondido {
+    display: none !important;
+}
+
+.conteudo-boletim {
+    position: relative;
+    z-index: 2;
+}
+
+/* =========================================
+   BOTÕES DE EDIÇÃO
+   ========================================= */
+.botoes-edicao {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.botoes-edicao button {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#btn-alterar {
+    background: #ff8fab;
+    color: #ffffff;
+}
+
+#btn-alterar:hover {
+    background: #d6336c;
+}
+
+#btn-salvar {
+    background: #38b000;
+    color: #ffffff;
+}
+
+#btn-salvar:hover {
+    background: #2d8a00;
+}
+
+#btn-cancelar {
+    background: #dddddd;
+    color: #4a2c3a;
+}
+
+#btn-cancelar:hover {
+    background: #bbbbbb;
+}
+
+.mensagem-edicao {
+    font-size: 0.85rem;
+    color: #e63946;
+    margin-bottom: 10px;
+    min-height: 20px;
+}
+
+/* =========================================
    CARDS DE RESUMO
    ========================================= */
 .cards-resumo {
@@ -58,7 +244,7 @@ header h1 {
     gap: 16px;
     margin-bottom: 30px;
     position: relative;
-    z-index: 1; /* Acima das folhas */
+    z-index: 2;
 }
 
 .card {
@@ -109,7 +295,7 @@ header h1 {
     overflow-x: auto;
     border: 2px solid #ffe0e8;
     position: relative;
-    z-index: 1; /* Acima das folhas */
+    z-index: 2;
 }
 
 table {
@@ -141,20 +327,39 @@ td {
     border-bottom: 1px solid #ffe0e8;
 }
 
-/* Primeira coluna (disciplinas) alinhada à esquerda */
 td:first-child {
     text-align: left;
     font-weight: 600;
     color: #d6336c;
 }
 
-/* Linhas zebradas */
 tbody tr:nth-child(even) {
     background: #fff5f8;
 }
 
 tbody tr:hover {
     background: #ffe0e8;
+}
+
+/* Inputs de edição dentro da tabela */
+td input {
+    width: 60px;
+    padding: 6px;
+    border: 2px solid #ffe0e8;
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    text-align: center;
+    outline: none;
+}
+
+td input:focus {
+    border-color: #ff8fab;
+}
+
+td input.invalido {
+    border-color: #e63946;
+    background: #ffe0e0;
 }
 
 /* Cores das situações */
@@ -180,89 +385,18 @@ tbody tr:hover {
 }
 
 /* =========================================
-   FOLHAS DE SAKURA CAINDO (ANIMAÇÃO)
-   ========================================= */
-
-/* Container fixo que cobre a tela inteira, atrás do conteúdo */
-.sakura-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none; /* Não atrapalha cliques */
-    overflow: hidden;
-    z-index: 0; /* Fica atrás do conteúdo, mas acima do fundo */
-}
-
-/* Estilo base de cada folha */
-.sakura {
-    position: absolute;
-    top: -10%; /* Começa acima da tela */
-    width: 20px;
-    height: 20px;
-    /* Formato de pétala usando border-radius */
-    background: radial-gradient(circle at 30% 30%, #ffd6e0, #ff8fab);
-    border-radius: 50% 0 50% 50%;
-    opacity: 0.8;
-    /* Animação de queda com rotação */
-    animation-name: cairSakura;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-}
-
-/* Animação: cai de cima para baixo girando e balançando */
-@keyframes cairSakura {
-    0% {
-        transform: translateY(-10vh) translateX(0) rotate(0deg);
-        opacity: 0;
-    }
-    10% {
-        opacity: 0.9;
-    }
-    50% {
-        transform: translateY(50vh) translateX(30px) rotate(180deg);
-    }
-    90% {
-        opacity: 0.9;
-    }
-    100% {
-        transform: translateY(110vh) translateX(-30px) rotate(360deg);
-        opacity: 0;
-    }
-}
-
-/* =========================================
    RESPONSIVIDADE (CELULAR)
    ========================================= */
 @media (max-width: 600px) {
-    body {
-        padding: 12px;
-    }
-
-    header {
-        padding: 20px 15px;
-    }
-
-    header h1 {
-        font-size: 1.8rem;
-    }
-
-    .subtitulo {
-        font-size: 0.95rem;
-    }
-
+    body { padding: 12px; }
+    header { padding: 20px 15px; }
+    header h1 { font-size: 1.8rem; }
+    .subtitulo { font-size: 0.95rem; }
     .cards-resumo {
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
         gap: 12px;
     }
-
-    .card p {
-        font-size: 1.5rem;
-    }
-
-    th, td {
-        padding: 10px 8px;
-        font-size: 0.8rem;
-    }
+    .card p { font-size: 1.5rem; }
+    th, td { padding: 10px 8px; font-size: 0.8rem; }
+    td input { width: 50px; font-size: 0.75rem; }
 }

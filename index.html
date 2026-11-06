@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Boletim Digital</title>
-    <!-- Link para o arquivo CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,23 +18,24 @@
     </header>
 
     <main>
-        <!-- Área de acesso por PIN -->
+        <!-- TELA DE ACESSO POR PIN (visível antes do login) -->
         <section class="acesso-container" id="acesso-container">
             <div class="acesso-box">
                 <h2>Acesso do Estudante</h2>
                 <p class="acesso-info">Série: 9º Ano | Turma: 9B | Chamada: 08</p>
                 <div class="acesso-campo">
                     <label for="input-pin">PIN:</label>
-                    <input type="password" id="input-pin" maxlength="10" placeholder="Digite seu PIN">
+                    <input type="password" id="input-pin" maxlength="10" placeholder="Digite seu PIN" autocomplete="off">
                 </div>
                 <button id="btn-entrar">Entrar</button>
                 <p id="mensagem-acesso" class="mensagem-acesso"></p>
             </div>
         </section>
 
-        <!-- Conteúdo do boletim (escondido até o login) -->
+        <!-- CONTEÚDO DO BOLETIM (escondido até o login) -->
         <section id="conteudo-boletim" class="conteudo-boletim escondido">
-            <!-- Área dos Cards de Resumo -->
+
+            <!-- Cards de Resumo -->
             <section class="cards-resumo">
                 <div class="card">
                     <h3>Média Geral</h3>
@@ -60,14 +60,15 @@
                 </div>
             </section>
 
-            <!-- Botão para editar dados -->
-            <div class="botoes-edicao escondido" id="botoes-edicao">
+            <!-- Botões de edição -->
+            <div class="botoes-edicao" id="botoes-edicao">
                 <button id="btn-alterar">Alterar dados</button>
                 <button id="btn-salvar" class="escondido">Salvar alterações</button>
                 <button id="btn-cancelar" class="escondido">Cancelar</button>
             </div>
+            <p id="mensagem-edicao" class="mensagem-edicao"></p>
 
-            <!-- Área da Tabela -->
+            <!-- Tabela -->
             <section class="tabela-container">
                 <table>
                     <thead>
@@ -82,14 +83,13 @@
                         </tr>
                     </thead>
                     <tbody id="corpo-tabela">
-                        <!-- O JavaScript vai preencher as linhas aqui automaticamente -->
+                        <!-- Preenchido pelo JavaScript -->
                     </tbody>
                 </table>
             </section>
         </section>
     </main>
 
-    <!-- Link para o arquivo JavaScript -->
     <script src="script.js"></script>
 </body>
 </html>
