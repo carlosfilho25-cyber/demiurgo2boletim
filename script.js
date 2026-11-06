@@ -10,7 +10,6 @@ const CONFIG_ALUNO = {
 // =========================================
 // DADOS FICTÍCIOS PADRONIZADOS - 9º ANO
 // =========================================
-// Estes dados são usados APENAS se a API não retornar dados salvos.
 const dadosLocais = [
     { disciplina: "Língua Portuguesa", tri1: 78, tri2: "8,2", tri3: 8.6, faltas: [2, 2, 1] },
     { disciplina: "Matemática", tri1: 55, tri2: "5,4", tri3: null, faltas: [3, 2, 2] },
@@ -32,13 +31,12 @@ const dadosLocais = [
 // =========================================
 // ESTADO GLOBAL
 // =========================================
-let pinSessao = null;          // PIN fica só em memória
-let dadosAtuais = [];          // Dados carregados (API ou locais)
+let pinSessao = null;          
+let dadosAtuais = [];          
 let modoEdicao = false;
 
 // =========================================
-// FUNÇÃO: normalizarNota(valor)
-// Para dados ANTIGOS (aceita 0-10, 10-100, vírgula, ponto)
+// FUNÇÕES DE NORMALIZAÇÃO E VALIDAÇÃO
 // =========================================
 function normalizarNota(valor) {
     if (valor === null || valor === undefined || valor === "") return null;
@@ -49,11 +47,6 @@ function normalizarNota(valor) {
     return null;
 }
 
-// =========================================
-// FUNÇÃO: normalizarNotaEdicao(valor)
-// Para NOTAS DIGITADAS no editor (aceita SÓ 0-10, ponto/vírgula)
-// Retorna: { ok: true, valor: number|null } ou { ok: false }
-// =========================================
 function normalizarNotaEdicao(texto) {
     const limpo = texto.trim();
     if (limpo === "") return { ok: true, valor: null };
@@ -63,10 +56,6 @@ function normalizarNotaEdicao(texto) {
     return { ok: true, valor: numero };
 }
 
-// =========================================
-// FUNÇÃO: validarFaltaEdicao(texto)
-// Aceita apenas inteiro >= 0
-// =========================================
 function validarFaltaEdicao(texto) {
     const limpo = texto.trim();
     if (limpo === "") return { ok: false };
@@ -113,7 +102,7 @@ function obterClasseSituacao(situacao) {
 // =========================================
 function renderizarTudo() {
     const corpoTabela = document.getElementById("corpo-tabela");
-    corpoTabela.innerHTML = ""; // limpa para não duplicar
+    corpoTabela.innerHTML = ""; 
 
     let somaMedias = 0;
     let quantidadeMedias = 0;
@@ -137,7 +126,6 @@ function renderizarTudo() {
         const linha = document.createElement("tr");
 
         if (modoEdicao) {
-            // Modo edição: inputs para notas e faltas
             linha.innerHTML = `
                 <td class="nome-disciplina"></td>
                 <td><input type="text" class="input-nota" data-index="${index}" data-tri="tri1" value="${n1 !== null ? n1 : ''}"></td>
@@ -153,7 +141,6 @@ function renderizarTudo() {
             `;
             linha.querySelector(".nome-disciplina").textContent = item.disciplina;
         } else {
-            // Modo visualização
             linha.innerHTML = `
                 <td class="nome-disciplina"></td>
                 <td class="${n1 === null ? 'nota-ausente' : ''}">${formatarNota(n1)}</td>
@@ -169,13 +156,11 @@ function renderizarTudo() {
         corpoTabela.appendChild(linha);
     });
 
-    // Atualiza cards
     const mediaGeral = quantidadeMedias > 0 ? somaMedias / quantidadeMedias : null;
     document.getElementById("card-media-geral").textContent = formatarNota(mediaGeral);
     document.getElementById("card-total-faltas").textContent = totalFaltas;
     document.getElementById("card-bom-desempenho").textContent = contBom;
     document.getElementById("card-atencao").textContent = contAtencao;
-    // Frequência APENAS DEMONSTRATIVA (não calculada a partir das faltas)
     document.getElementById("card-frequencia").textContent = "92%";
 }
 
@@ -246,22 +231,17 @@ async function entrarComPin() {
         }
 
         const dados = await resposta.json();
-
-        // Guarda o PIN em memória (nunca em localStorage/sessionStorage)
         pinSessao = pin;
 
-        // Decide quais dados usar: API > locais
         if (dados.dados && Array.isArray(dados.dados.disciplinas) && dados.dados.disciplinas.length > 0) {
             dadosAtuais = dados.dados.disciplinas;
         } else {
             dadosAtuais = JSON.parse(JSON.stringify(dadosLocais));
         }
 
-        // Limpa o campo do PIN após login
         inputPin.value = "";
         mensagem.textContent = "";
 
-        // Mostra o boletim e esconde a tela de acesso
         document.getElementById("acesso-container").classList.add("escondido");
         document.getElementById("conteudo-boletim").classList.remove("escondido");
 
@@ -291,7 +271,6 @@ function cancelarEdicao() {
     document.getElementById("btn-salvar").classList.add("escondido");
     document.getElementById("btn-cancelar").classList.add("escondido");
     document.getElementById("mensagem-edicao").textContent = "";
-    // Recarrega os dados originais (sem alterações não salvas)
     renderizarTudo();
 }
 
@@ -300,7 +279,6 @@ async function salvarAlteracoes() {
     mensagem.textContent = "";
     mensagem.style.color = "#e63946";
 
-    // Valida todos os inputs antes de qualquer coisa
     const inputsNota = document.querySelectorAll(".input-nota");
     const inputsFalta = document.querySelectorAll(".input-falta");
     let temErro = false;
@@ -308,7 +286,6 @@ async function salvarAlteracoes() {
     inputsNota.forEach(input => input.classList.remove("invalido"));
     inputsFalta.forEach(input => input.classList.remove("invalido"));
 
-    // Prepara cópia dos dados
     const novosDados = JSON.parse(JSON.stringify(dadosAtuais));
 
     inputsNota.forEach(input => {
@@ -388,7 +365,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-cancelar").addEventListener("click", cancelarEdicao);
     document.getElementById("btn-salvar").addEventListener("click", salvarAlteracoes);
 
-    // Permite pressionar Enter no campo PIN
     document.getElementById("input-pin").addEventListener("keydown", (e) => {
         if (e.key === "Enter") entrarComPin();
     });
