@@ -17,6 +17,7 @@ body {
     font-family: 'Poppins', sans-serif;
     min-height: 100vh;
     padding: 20px;
+    position: relative; /* Necessário para o sakura-container */
 }
 
 /* =========================================
@@ -29,6 +30,8 @@ header {
     background: linear-gradient(135deg, #ffb6c1 0%, #ff8fab 100%);
     border-radius: 20px;
     box-shadow: 0 8px 20px rgba(255, 143, 171, 0.3);
+    position: relative;
+    z-index: 1; /* Fica acima das folhas */
 }
 
 header h1 {
@@ -54,6 +57,8 @@ header h1 {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 16px;
     margin-bottom: 30px;
+    position: relative;
+    z-index: 1; /* Acima das folhas */
 }
 
 .card {
@@ -103,6 +108,8 @@ header h1 {
     box-shadow: 0 4px 20px rgba(255, 143, 171, 0.2);
     overflow-x: auto;
     border: 2px solid #ffe0e8;
+    position: relative;
+    z-index: 1; /* Acima das folhas */
 }
 
 table {
@@ -134,12 +141,14 @@ td {
     border-bottom: 1px solid #ffe0e8;
 }
 
+/* Primeira coluna (disciplinas) alinhada à esquerda */
 td:first-child {
     text-align: left;
     font-weight: 600;
     color: #d6336c;
 }
 
+/* Linhas zebradas */
 tbody tr:nth-child(even) {
     background: #fff5f8;
 }
@@ -148,6 +157,7 @@ tbody tr:hover {
     background: #ffe0e8;
 }
 
+/* Cores das situações */
 .situacao-bom {
     color: #38b000;
     font-weight: 600;
@@ -167,6 +177,59 @@ tbody tr:hover {
     color: #bbbbbb;
     font-style: italic;
     font-size: 0.85rem;
+}
+
+/* =========================================
+   FOLHAS DE SAKURA CAINDO (ANIMAÇÃO)
+   ========================================= */
+
+/* Container fixo que cobre a tela inteira, atrás do conteúdo */
+.sakura-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Não atrapalha cliques */
+    overflow: hidden;
+    z-index: 0; /* Fica atrás do conteúdo, mas acima do fundo */
+}
+
+/* Estilo base de cada folha */
+.sakura {
+    position: absolute;
+    top: -10%; /* Começa acima da tela */
+    width: 20px;
+    height: 20px;
+    /* Formato de pétala usando border-radius */
+    background: radial-gradient(circle at 30% 30%, #ffd6e0, #ff8fab);
+    border-radius: 50% 0 50% 50%;
+    opacity: 0.8;
+    /* Animação de queda com rotação */
+    animation-name: cairSakura;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+/* Animação: cai de cima para baixo girando e balançando */
+@keyframes cairSakura {
+    0% {
+        transform: translateY(-10vh) translateX(0) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.9;
+    }
+    50% {
+        transform: translateY(50vh) translateX(30px) rotate(180deg);
+    }
+    90% {
+        opacity: 0.9;
+    }
+    100% {
+        transform: translateY(110vh) translateX(-30px) rotate(360deg);
+        opacity: 0;
+    }
 }
 
 /* =========================================

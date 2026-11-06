@@ -159,3 +159,43 @@ document.getElementById("card-atencao").textContent = contAtencao;
 // IMPORTANTE: valor APENAS DEMONSTRATIVO. Não é calculado a partir das faltas.
 // No futuro, será tratado de outra forma.
 document.getElementById("card-frequencia").textContent = "92%";
+
+// =========================================
+// FOLHAS DE SAKURA CAINDO
+// =========================================
+// Criamos várias folhas com posições, tamanhos e velocidades diferentes.
+
+const sakuraContainer = document.getElementById("sakura-container");
+
+// Quantidade de folhas na tela
+const QUANTIDADE_FOLHAS = 25;
+
+// Loop para criar cada folha
+for (let i = 0; i < QUANTIDADE_FOLHAS; i++) {
+    // Cria o elemento da folha
+    const folha = document.createElement("div");
+    folha.classList.add("sakura");
+
+    // Posição horizontal aleatória (0 a 100% da tela)
+    const posicaoX = Math.random() * 100;
+    folha.style.left = posicaoX + "%";
+
+    // Tamanho aleatório entre 12px e 24px
+    const tamanho = Math.random() * 12 + 12;
+    folha.style.width = tamanho + "px";
+    folha.style.height = tamanho + "px";
+
+    // Duração da queda aleatória entre 8 e 18 segundos
+    const duracao = Math.random() * 10 + 8;
+    folha.style.animationDuration = duracao + "s";
+
+    // Atraso inicial aleatório para as folhas não caírem todas juntas
+    const atraso = Math.random() * 15;
+    folha.style.animationDelay = atraso + "s";
+
+    // Leve variação de opacidade
+    folha.style.opacity = Math.random() * 0.4 + 0.4;
+
+    // Adiciona a folha ao container
+    sakuraContainer.appendChild(folha);
+}
