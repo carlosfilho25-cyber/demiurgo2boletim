@@ -25,19 +25,22 @@ body {
 .personagem-fundo {
     position: fixed;
     bottom: 0;
-    right: 20px; /* Posicionado no canto direito */
+    right: 20px; 
     width: 350px;
     height: 500px;
-    /* Substitua 'astolfo.png' pelo nome exato do arquivo que você subiu */
     background-image: url('astolfo.png'); 
     background-size: contain;
     background-repeat: no-repeat;
     background-position: bottom right;
-    z-index: 1; /* Fica atrás do boletim, mas na frente das sakuras */
-    pointer-events: none; /* Não atrapalha os cliques no site */
+    
+    /* Remove o fundo branco da imagem misturando com o rosa */
+    mix-blend-mode: multiply;
+    
+    z-index: 1; 
+    pointer-events: none; 
     opacity: 0.9;
     
-    /* Animação de balançar (simulando o cabelo/vento) */
+    /* Animação de balançar */
     animation: balancarPersonagem 4s ease-in-out infinite alternate;
 }
 
@@ -57,7 +60,7 @@ body {
     height: 100%;
     pointer-events: none;
     overflow: hidden;
-    z-index: 0; /* Fica atrás de tudo */
+    z-index: 0; /* Fica atrás do personagem */
 }
 
 .sakura {
@@ -425,7 +428,6 @@ td input.invalido {
     th, td { padding: 10px 8px; font-size: 0.8rem; }
     td input { width: 50px; font-size: 0.75rem; }
     
-    /* No celular, o personagem fica um pouco menor e mais transparente para não atrapalhar */
     .personagem-fundo {
         width: 200px;
         height: 300px;
