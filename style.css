@@ -26,7 +26,7 @@ body {
     position: fixed;
     bottom: 0;
     right: 20px; 
-    width: 380px; /* Tamanho da imagem */
+    width: 380px; 
     height: 550px;
     
     /* Nome exato da imagem que você subiu no GitHub */
@@ -105,6 +105,20 @@ header h1 {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
     letter-spacing: 1px;
     margin-bottom: 8px;
+    line-height: 1.2;
+}
+
+/* Estilo da Coroa de Flores */
+.coroa {
+    font-size: 2rem;
+    display: inline-block;
+    animation: flutuarCoroa 3s ease-in-out infinite alternate;
+    margin-bottom: 5px;
+}
+
+@keyframes flutuarCoroa {
+    0% { transform: translateY(0px); }
+    100% { transform: translateY(-5px); }
 }
 
 .subtitulo {
@@ -373,6 +387,7 @@ td input.invalido { border-color: #e63946; background: #ffe0e0; }
     body { padding: 12px; }
     header { padding: 20px 15px; }
     header h1 { font-size: 1.8rem; }
+    .coroa { font-size: 1.5rem; }
     .subtitulo { font-size: 0.95rem; }
     .cards-resumo {
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
