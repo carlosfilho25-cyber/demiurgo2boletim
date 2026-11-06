@@ -19,26 +19,19 @@ body {
     position: relative;
 }
 
-/* =========================================
-   PERSONAGEM DE FUNDO (ASTOLFO)
-   ========================================= */
 .personagem-fundo {
     position: fixed;
     bottom: 0;
     right: 20px; 
     width: 400px; 
     height: 550px;
-    
     background-image: url('https://i.pinimg.com/originals/f5/44/29/f544290b5eb1ff69cf7e1f79f69b6835.png'); 
-    
     background-size: contain;
     background-repeat: no-repeat;
     background-position: bottom right;
-    
     z-index: 1; 
     pointer-events: none; 
     opacity: 0.9;
-    
     animation: balancarPersonagem 4s ease-in-out infinite alternate;
 }
 
@@ -47,9 +40,6 @@ body {
     100% { transform: rotate(2deg) translateY(-10px); }
 }
 
-/* =========================================
-   FOLHAS DE SAKURA
-   ========================================= */
 .sakura-container {
     position: fixed;
     top: 0;
@@ -80,9 +70,6 @@ body {
     100% { transform: translateY(110vh) translateX(-30px) rotate(360deg); opacity: 0; }
 }
 
-/* =========================================
-   CABEÇALHO
-   ========================================= */
 header {
     text-align: center;
     margin-bottom: 30px;
@@ -109,9 +96,6 @@ header h1 {
     letter-spacing: 1px;
 }
 
-/* =========================================
-   TELA DE ACESSO (PIN)
-   ========================================= */
 .acesso-container {
     display: flex;
     justify-content: center;
@@ -196,9 +180,6 @@ header h1 {
     min-height: 20px;
 }
 
-/* =========================================
-   CONTEÚDO DO BOLETIM
-   ========================================= */
 .escondido {
     display: none !important;
 }
@@ -208,9 +189,6 @@ header h1 {
     z-index: 2;
 }
 
-/* =========================================
-   BOTÕES DE EDIÇÃO
-   ========================================= */
 .botoes-edicao {
     display: flex;
     gap: 12px;
@@ -243,9 +221,6 @@ header h1 {
     min-height: 20px;
 }
 
-/* =========================================
-   CARDS DE RESUMO
-   ========================================= */
 .cards-resumo {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -314,6 +289,7 @@ header h1 {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
+    min-width: 0; /* Importante para o Grid não esmagar */
 }
 
 .grafico-card:hover {
@@ -338,15 +314,22 @@ header h1 {
 
 .grafico-container {
     position: relative;
-    height: 250px; /* Altura padrão */
+    height: 250px;
     width: 100%;
+    min-width: 0;
 }
 
 .grafico-alto {
-    height: 450px; /* Maior para caber as 15 disciplinas */
+    height: 450px;
 }
 
-/* Estilo do Badge de Perigo */
+/* Força o canvas a preencher o espaço */
+.grafico-container canvas {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
 #estado-faltas {
     background: #e63946;
     color: #ffffff;
@@ -364,7 +347,6 @@ header h1 {
     100% { opacity: 1; transform: scale(1.05); box-shadow: 0 0 10px rgba(230, 57, 70, 0.6); }
 }
 
-/* Destaque no card de faltas quando em perigo */
 #card-grafico-faltas.perigo-ativo {
     border-color: #e63946;
     box-shadow: 0 0 20px rgba(230, 57, 70, 0.4);
@@ -438,14 +420,10 @@ td input.invalido { border-color: #e63946; background: #ffe0e0; }
 .situacao-sem-nota { color: #999999; font-style: italic; }
 .nota-ausente { color: #bbbbbb; font-style: italic; font-size: 0.85rem; }
 
-/* =========================================
-   RESPONSIVIDADE (TABLET E CELULAR)
-   ========================================= */
 @media (max-width: 900px) {
     .area-graficos {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    /* O gráfico de médias ocupa as duas colunas no tablet */
     .grafico-card:first-child {
         grid-column: span 2;
     }
@@ -464,7 +442,7 @@ td input.invalido { border-color: #e63946; background: #ffe0e0; }
     .card p { font-size: 1.5rem; }
     
     .area-graficos {
-        grid-template-columns: 1fr; /* Uma coluna no celular */
+        grid-template-columns: 1fr;
     }
     .grafico-card:first-child {
         grid-column: span 1;

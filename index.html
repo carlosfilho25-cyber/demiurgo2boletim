@@ -5,25 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Boletim Digital</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Chart.js para os gráficos -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js versão estável -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 </head>
 <body>
 
-    <!-- Folhas de sakura caindo no fundo -->
     <div class="sakura-container" id="sakura-container"></div>
-    
-    <!-- Personagem de fundo (Astolfo) -->
     <div class="personagem-fundo"></div>
 
-    <!-- Cabeçalho do site -->
     <header>
         <h1>Boletim Digital</h1>
         <p class="subtitulo">9º Ano - Estudante Exemplo</p>
     </header>
 
     <main>
-        <!-- TELA DE ACESSO POR PIN -->
         <section class="acesso-container" id="acesso-container">
             <div class="acesso-box">
                 <h2>Acesso do Estudante</h2>
@@ -37,10 +32,8 @@
             </div>
         </section>
 
-        <!-- CONTEÚDO DO BOLETIM -->
         <section id="conteudo-boletim" class="conteudo-boletim escondido">
 
-            <!-- Cards de Resumo -->
             <section class="cards-resumo">
                 <div class="card">
                     <h3>Média Geral</h3>
@@ -65,7 +58,6 @@
                 </div>
             </section>
 
-            <!-- Área dos Gráficos -->
             <section class="area-graficos">
                 <article class="grafico-card">
                     <h2>Média por disciplina</h2>
@@ -89,7 +81,6 @@
                 </article>
             </section>
 
-            <!-- Botões de edição -->
             <div class="botoes-edicao" id="botoes-edicao">
                 <button id="btn-alterar">Alterar dados</button>
                 <button id="btn-salvar" class="escondido">Salvar alterações</button>
@@ -97,7 +88,6 @@
             </div>
             <p id="mensagem-edicao" class="mensagem-edicao"></p>
 
-            <!-- Tabela -->
             <section class="tabela-container">
                 <table>
                     <thead>
