@@ -7,6 +7,14 @@ const CONFIG_ALUNO = {
     apiUrl: "https://boletim-api.profbt.com.br"
 };
 
+// Regras do boletim (ajuste aqui se a escola mudar)
+const REGRAS = {
+    mediaMinima: 6.0,          // abaixo disso = "Atenção"
+    totalAulasAno: 640,        // total de aulas usado no cálculo da frequência
+    frequenciaMinima: 75,      // % mínima de presença (frequência abaixo disso = perigo)
+    timeoutMs: 10000           // tempo máximo de espera da API
+};
+
 // =========================================
 // DADOS FICTÍCIOS PADRONIZADOS - 9º ANO
 // =========================================
@@ -31,21 +39,49 @@ const dadosLocais = [
 // =========================================
 // ESTADO GLOBAL
 // =========================================
-let pinSessao = null;          
-let dadosAtuais = [];          
+let pinSessao = null;
+let dadosAtuais = [];
 let modoEdicao = false;
 
-// Variáveis dos Gráficos
 let graficoMedias = null;
 let graficoEvolucao = null;
 let graficoFaltas = null;
+let timerGraficos = null;
+
+const $ = (id) => document.getElementById(id);
+const prefereMenosMovimento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// =========================================
+// UTILIDADES
+// =========================================
+function mostrarMensagem(elemento, texto, tipo = "erro") {
+    elemento.textContent = texto;
+    elemento.classList.remove("erro", "ok", "info");
+    if (texto) elemento.classList.add(tipo);
+}
+
+async function fetchComTimeout(url, opcoes) {
+    const controlador = new AbortController();
+    const timer = setTimeout(() => controlador.abort(), REGRAS.timeoutMs);
+    try {
+        return await fetch(url, { ...opcoes, signal: controlador.signal });
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+function alternarBotoesEdicao(editando) {
+    $("btn-alterar").classList.toggle("escondido", editando);
+    $("btn-salvar").classList.toggle("escondido", !editando);
+    $("btn-cancelar").classList.toggle("escondido", !editando);
+}
 
 // =========================================
 // FUNÇÕES DE NORMALIZAÇÃO E VALIDAÇÃO
 // =========================================
 function normalizarNota(valor) {
     if (valor === null || valor === undefined || valor === "") return null;
-    let numero = parseFloat(String(valor).replace(",", "."));
+    const numero = parseFloat(String(valor).replace(",", "."));
     if (isNaN(numero)) return null;
     if (numero >= 0 && numero <= 10) return numero;
     if (numero > 10 && numero <= 100) return numero / 10;
@@ -72,16 +108,14 @@ function validarFaltaEdicao(texto) {
 // FUNÇÕES DE CÁLCULO
 // =========================================
 function calcularMedia(notas) {
-    const validas = notas.filter(n => n !== null);
+    const validas = notas.filter((n) => n !== null);
     if (validas.length === 0) return null;
-    let soma = 0;
-    validas.forEach(n => soma += n);
-    return soma / validas.length;
+    return validas.reduce((a, b) => a + b, 0) / validas.length;
 }
 
 function definirSituacao(media) {
     if (media === null) return "Nota ainda não disponível";
-    if (media >= 6.0) return "Bom desempenho";
+    if (media >= REGRAS.mediaMinima) return "Bom desempenho";
     return "Atenção";
 }
 
@@ -91,9 +125,7 @@ function formatarNota(nota) {
 }
 
 function somarFaltas(faltas) {
-    let total = 0;
-    faltas.forEach(f => total += f);
-    return total;
+    return (faltas || []).reduce((a, b) => a + (Number(b) || 0), 0);
 }
 
 function obterClasseSituacao(situacao) {
@@ -102,12 +134,24 @@ function obterClasseSituacao(situacao) {
     return "situacao-sem-nota";
 }
 
+function calcularFrequencia(totalFaltas) {
+    const pct = 100 - (totalFaltas / REGRAS.totalAulasAno) * 100;
+    return Math.max(0, Math.min(100, pct));
+}
+
+// Célula de nota (modo leitura): destaca nota baixa e nota ausente
+function celulaNota(nota) {
+    if (nota === null) return `<td class="nota-ausente">${formatarNota(nota)}</td>`;
+    const classe = nota < REGRAS.mediaMinima ? "nota-baixa" : "";
+    return `<td class="${classe}">${formatarNota(nota)}</td>`;
+}
+
 // =========================================
 // RENDERIZAÇÃO DA TABELA E CARDS
 // =========================================
 function renderizarTudo() {
-    const corpoTabela = document.getElementById("corpo-tabela");
-    corpoTabela.innerHTML = ""; 
+    const corpoTabela = $("corpo-tabela");
+    corpoTabela.innerHTML = "";
 
     let somaMedias = 0;
     let quantidadeMedias = 0;
@@ -129,63 +173,76 @@ function renderizarTudo() {
         if (situacao === "Atenção") contAtencao++;
 
         const linha = document.createElement("tr");
+        const pill = `<td><span class="pill ${obterClasseSituacao(situacao)}">${situacao}</span></td>`;
+        const nome = `<td class="nome-disciplina"></td>`;
 
         if (modoEdicao) {
+            const inputNota = (tri, valor) =>
+                `<td><input type="text" inputmode="decimal" class="input-nota" data-index="${index}" data-tri="${tri}" value="${valor !== null ? valor : ''}" aria-label="Nota do ${tri.slice(-1)}º trimestre"></td>`;
+            const inputFalta = (tri) =>
+                `<input type="text" inputmode="numeric" class="input-falta" data-index="${index}" data-tri="${tri}" value="${item.faltas[tri]}" aria-label="Faltas do ${tri + 1}º trimestre">`;
+
             linha.innerHTML = `
-                <td class="nome-disciplina"></td>
-                <td><input type="text" class="input-nota" data-index="${index}" data-tri="tri1" value="${n1 !== null ? n1 : ''}"></td>
-                <td><input type="text" class="input-nota" data-index="${index}" data-tri="tri2" value="${n2 !== null ? n2 : ''}"></td>
-                <td><input type="text" class="input-nota" data-index="${index}" data-tri="tri3" value="${n3 !== null ? n3 : ''}"></td>
+                ${nome}
+                ${inputNota("tri1", n1)}
+                ${inputNota("tri2", n2)}
+                ${inputNota("tri3", n3)}
                 <td><strong>${formatarNota(media)}</strong></td>
-                <td>
-                    <input type="text" class="input-falta" data-index="${index}" data-tri="0" value="${item.faltas[0]}">
-                    <input type="text" class="input-falta" data-index="${index}" data-tri="1" value="${item.faltas[1]}">
-                    <input type="text" class="input-falta" data-index="${index}" data-tri="2" value="${item.faltas[2]}">
-                </td>
-                <td class="${obterClasseSituacao(situacao)}">${situacao}</td>
+                <td><div class="faltas-edicao">${inputFalta(0)}${inputFalta(1)}${inputFalta(2)}</div></td>
+                ${pill}
             `;
-            linha.querySelector(".nome-disciplina").textContent = item.disciplina;
         } else {
             linha.innerHTML = `
-                <td class="nome-disciplina"></td>
-                <td class="${n1 === null ? 'nota-ausente' : ''}">${formatarNota(n1)}</td>
-                <td class="${n2 === null ? 'nota-ausente' : ''}">${formatarNota(n2)}</td>
-                <td class="${n3 === null ? 'nota-ausente' : ''}">${formatarNota(n3)}</td>
+                ${nome}
+                ${celulaNota(n1)}
+                ${celulaNota(n2)}
+                ${celulaNota(n3)}
                 <td><strong>${formatarNota(media)}</strong></td>
                 <td>${faltasTotal}</td>
-                <td class="${obterClasseSituacao(situacao)}">${situacao}</td>
+                ${pill}
             `;
-            linha.querySelector(".nome-disciplina").textContent = item.disciplina;
         }
 
+        // textContent evita injetar HTML vindo da API
+        linha.querySelector(".nome-disciplina").textContent = item.disciplina;
         corpoTabela.appendChild(linha);
     });
 
     const mediaGeral = quantidadeMedias > 0 ? somaMedias / quantidadeMedias : null;
-    document.getElementById("card-media-geral").textContent = formatarNota(mediaGeral);
-    document.getElementById("card-total-faltas").textContent = totalFaltas;
-    document.getElementById("card-bom-desempenho").textContent = contBom;
-    document.getElementById("card-atencao").textContent = contAtencao;
-    document.getElementById("card-frequencia").textContent = "92%";
+    const frequencia = calcularFrequencia(totalFaltas);
+    const frequenciaOk = frequencia >= REGRAS.frequenciaMinima;
 
-    atualizarGraficos();
+    $("card-media-geral").textContent = formatarNota(mediaGeral);
+    $("card-total-faltas").textContent = totalFaltas;
+    $("card-bom-desempenho").textContent = contBom;
+    $("card-atencao").textContent = contAtencao;
+    $("card-frequencia").textContent = Math.round(frequencia) + "%";
+
+    const status = $("status-frequencia");
+    status.textContent = frequenciaOk ? "Frequência adequada" : "Frequência em risco";
+    status.classList.toggle("risco", !frequenciaOk);
+
+    atualizarGraficos(!frequenciaOk);
 }
 
 // =========================================
 // FOLHAS DE SAKURA
 // =========================================
 function criarSakuras() {
-    const container = document.getElementById("sakura-container");
-    const QUANTIDADE = 25;
-    for (let i = 0; i < QUANTIDADE; i++) {
+    if (prefereMenosMovimento) return;
+
+    const container = $("sakura-container");
+    const quantidade = window.innerWidth < 600 ? 12 : 25;
+
+    for (let i = 0; i < quantidade; i++) {
         const folha = document.createElement("div");
         folha.classList.add("sakura");
-        folha.style.left = (Math.random() * 100) + "%";
+        folha.style.left = Math.random() * 100 + "%";
         const tamanho = Math.random() * 12 + 12;
         folha.style.width = tamanho + "px";
         folha.style.height = tamanho + "px";
-        folha.style.animationDuration = (Math.random() * 10 + 8) + "s";
-        folha.style.animationDelay = (Math.random() * 15) + "s";
+        folha.style.animationDuration = Math.random() * 10 + 8 + "s";
+        folha.style.animationDelay = Math.random() * 15 + "s";
         folha.style.opacity = Math.random() * 0.4 + 0.4;
         container.appendChild(folha);
     }
@@ -195,21 +252,33 @@ function criarSakuras() {
 // LOGIN POR PIN
 // =========================================
 async function entrarComPin() {
-    const inputPin = document.getElementById("input-pin");
-    const mensagem = document.getElementById("mensagem-acesso");
-    const btnEntrar = document.getElementById("btn-entrar");
+    const inputPin = $("input-pin");
+    const mensagem = $("mensagem-acesso");
+    const btnEntrar = $("btn-entrar");
     const pin = inputPin.value.trim();
 
     if (!pin) {
         mensagem.textContent = "Digite o PIN.";
+        inputPin.focus();
         return;
     }
 
     mensagem.textContent = "Conectando...";
     btnEntrar.disabled = true;
+    btnEntrar.textContent = "Entrando...";
+
+    const falhar = (texto) => {
+        mensagem.textContent = texto;
+        btnEntrar.disabled = false;
+        btnEntrar.textContent = "Entrar";
+        const caixa = document.querySelector(".acesso-box");
+        caixa.classList.remove("erro");
+        void caixa.offsetWidth; // reinicia a animação de tremer
+        caixa.classList.add("erro");
+    };
 
     try {
-        const resposta = await fetch(`${CONFIG_ALUNO.apiUrl}/api/v1/boletins/abrir`, {
+        const resposta = await fetchComTimeout(`${CONFIG_ALUNO.apiUrl}/api/v1/boletins/abrir`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -219,23 +288,9 @@ async function entrarComPin() {
             })
         });
 
-        if (resposta.status === 401) {
-            mensagem.textContent = "Turma, chamada ou PIN inválidos.";
-            btnEntrar.disabled = false;
-            return;
-        }
-
-        if (resposta.status === 429) {
-            mensagem.textContent = "Muitas tentativas. Aguarde um minuto e tente novamente.";
-            btnEntrar.disabled = false;
-            return;
-        }
-
-        if (!resposta.ok) {
-            mensagem.textContent = "Erro ao conectar. Tente novamente.";
-            btnEntrar.disabled = false;
-            return;
-        }
+        if (resposta.status === 401) return falhar("Turma, chamada ou PIN inválidos.");
+        if (resposta.status === 429) return falhar("Muitas tentativas. Aguarde um minuto e tente novamente.");
+        if (!resposta.ok) return falhar("Erro ao conectar. Tente novamente.");
 
         const dados = await resposta.json();
         pinSessao = pin;
@@ -248,16 +303,36 @@ async function entrarComPin() {
 
         inputPin.value = "";
         mensagem.textContent = "";
+        btnEntrar.disabled = false;
+        btnEntrar.textContent = "Entrar";
 
-        document.getElementById("acesso-container").classList.add("escondido");
-        document.getElementById("conteudo-boletim").classList.remove("escondido");
+        $("acesso-container").classList.add("escondido");
+        $("conteudo-boletim").classList.remove("escondido");
 
         renderizarTudo();
 
     } catch (erro) {
-        mensagem.textContent = "Não foi possível conectar ao servidor. Tente novamente.";
-        btnEntrar.disabled = false;
+        falhar(erro.name === "AbortError"
+            ? "O servidor demorou para responder. Tente novamente."
+            : "Não foi possível conectar ao servidor. Tente novamente.");
     }
+}
+
+function sair() {
+    if (modoEdicao && !confirm("Você tem alterações não salvas. Deseja sair mesmo assim?")) return;
+
+    pinSessao = null;
+    dadosAtuais = [];
+    modoEdicao = false;
+    alternarBotoesEdicao(false);
+    mostrarMensagem($("mensagem-edicao"), "");
+
+    [graficoMedias, graficoEvolucao, graficoFaltas].forEach((g) => g && g.destroy());
+    graficoMedias = graficoEvolucao = graficoFaltas = null;
+
+    $("conteudo-boletim").classList.add("escondido");
+    $("acesso-container").classList.remove("escondido");
+    $("input-pin").focus();
 }
 
 // =========================================
@@ -265,49 +340,46 @@ async function entrarComPin() {
 // =========================================
 function ativarEdicao() {
     modoEdicao = true;
-    document.getElementById("btn-alterar").classList.add("escondido");
-    document.getElementById("btn-salvar").classList.remove("escondido");
-    document.getElementById("btn-cancelar").classList.remove("escondido");
-    document.getElementById("mensagem-edicao").textContent = "";
+    alternarBotoesEdicao(true);
+    mostrarMensagem($("mensagem-edicao"), "Edite as notas (0 a 10) e as faltas. Enter salva, Esc cancela.", "info");
     renderizarTudo();
+    const primeiro = document.querySelector(".input-nota");
+    if (primeiro) primeiro.focus();
 }
 
 function cancelarEdicao() {
     modoEdicao = false;
-    document.getElementById("btn-alterar").classList.remove("escondido");
-    document.getElementById("btn-salvar").classList.add("escondido");
-    document.getElementById("btn-cancelar").classList.add("escondido");
-    document.getElementById("mensagem-edicao").textContent = "";
+    alternarBotoesEdicao(false);
+    mostrarMensagem($("mensagem-edicao"), "");
     renderizarTudo();
 }
 
 async function salvarAlteracoes() {
-    const mensagem = document.getElementById("mensagem-edicao");
-    mensagem.textContent = "";
-    mensagem.style.color = "#e63946";
+    const mensagem = $("mensagem-edicao");
+    const btnSalvar = $("btn-salvar");
+    const btnCancelar = $("btn-cancelar");
 
     const inputsNota = document.querySelectorAll(".input-nota");
     const inputsFalta = document.querySelectorAll(".input-falta");
     let temErro = false;
 
-    inputsNota.forEach(input => input.classList.remove("invalido"));
-    inputsFalta.forEach(input => input.classList.remove("invalido"));
+    inputsNota.forEach((input) => input.classList.remove("invalido"));
+    inputsFalta.forEach((input) => input.classList.remove("invalido"));
 
     const novosDados = JSON.parse(JSON.stringify(dadosAtuais));
 
-    inputsNota.forEach(input => {
+    inputsNota.forEach((input) => {
         const idx = parseInt(input.dataset.index, 10);
-        const tri = input.dataset.tri;
         const resultado = normalizarNotaEdicao(input.value);
         if (!resultado.ok) {
             input.classList.add("invalido");
             temErro = true;
         } else {
-            novosDados[idx][tri] = resultado.valor;
+            novosDados[idx][input.dataset.tri] = resultado.valor;
         }
     });
 
-    inputsFalta.forEach(input => {
+    inputsFalta.forEach((input) => {
         const idx = parseInt(input.dataset.index, 10);
         const tri = parseInt(input.dataset.tri, 10);
         const resultado = validarFaltaEdicao(input.value);
@@ -320,15 +392,18 @@ async function salvarAlteracoes() {
     });
 
     if (temErro) {
-        mensagem.textContent = "Corrija os campos destacados em vermelho.";
+        mostrarMensagem(mensagem, "Corrija os campos destacados em vermelho.", "erro");
+        const primeiroErro = document.querySelector("input.invalido");
+        if (primeiroErro) primeiroErro.focus();
         return;
     }
 
-    mensagem.textContent = "Salvando...";
-    mensagem.style.color = "#888";
+    mostrarMensagem(mensagem, "Salvando...", "info");
+    btnSalvar.disabled = true;
+    btnCancelar.disabled = true;
 
     try {
-        const resposta = await fetch(`${CONFIG_ALUNO.apiUrl}/api/v1/boletins/salvar`, {
+        const resposta = await fetchComTimeout(`${CONFIG_ALUNO.apiUrl}/api/v1/boletins/salvar`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -340,235 +415,185 @@ async function salvarAlteracoes() {
         });
 
         if (!resposta.ok) {
-            mensagem.textContent = "Não foi possível salvar. Tente novamente.";
-            mensagem.style.color = "#e63946";
+            mostrarMensagem(mensagem, "Não foi possível salvar. Tente novamente.", "erro");
             return;
         }
 
         dadosAtuais = novosDados;
         modoEdicao = false;
-        document.getElementById("btn-alterar").classList.remove("escondido");
-        document.getElementById("btn-salvar").classList.add("escondido");
-        document.getElementById("btn-cancelar").classList.add("escondido");
+        alternarBotoesEdicao(false);
         renderizarTudo();
-
-        mensagem.textContent = "Dados salvos com sucesso.";
-        mensagem.style.color = "#38b000";
+        mostrarMensagem(mensagem, "Dados salvos com sucesso.", "ok");
 
     } catch (erro) {
-        mensagem.textContent = "Não foi possível salvar. Tente novamente.";
-        mensagem.style.color = "#e63946";
+        mostrarMensagem(mensagem,
+            erro.name === "AbortError"
+                ? "O servidor demorou para responder. Tente novamente."
+                : "Não foi possível salvar. Tente novamente.",
+            "erro");
+    } finally {
+        btnSalvar.disabled = false;
+        btnCancelar.disabled = false;
     }
 }
 
 // =========================================
-// FUNÇÕES DOS GRÁFICOS (SOMENTE LEITURA)
+// FUNÇÕES DOS GRÁFICOS
 // =========================================
-function atualizarGraficos() {
+function atualizarGraficos(emPerigo = false) {
     if (typeof Chart === "undefined") {
         console.error("A biblioteca Chart.js não foi carregada.");
         return;
     }
 
-    // O setTimeout dá um tempinho para o navegador calcular o layout antes de desenhar o gráfico
-    setTimeout(() => {
-        Chart.defaults.font.family = "'Poppins', sans-serif";
-        Chart.defaults.color = "#4a2c3a";
+    // Evita desenhar duas vezes se renderizarTudo for chamado em sequência
+    clearTimeout(timerGraficos);
+    timerGraficos = setTimeout(() => desenharGraficos(emPerigo), 100);
+}
 
-        // ----------------------------------------------------
-        // GRÁFICO 1: MÉDIA POR DISCIPLINA
-        // ----------------------------------------------------
-        const ctxMedias = document.getElementById("graficoMediasDisciplinas");
-        if (ctxMedias) {
-            if (graficoMedias) graficoMedias.destroy();
+function desenharGraficos(emPerigo) {
+    Chart.defaults.font.family = "'Poppins', sans-serif";
+    Chart.defaults.color = "#4a2c3a";
+    if (prefereMenosMovimento) Chart.defaults.animation = false;
 
-            const labelsMedias = dadosAtuais.map(d => d.disciplina);
-            const dadosMedias = dadosAtuais.map(d => {
-                return calcularMedia([
-                    normalizarNota(d.tri1),
-                    normalizarNota(d.tri2),
-                    normalizarNota(d.tri3)
-                ]);
-            });
+    const ROSA = "#ff8fab";
+    const ROSA_ESCURO = "#d6336c";
+    const VERMELHO = "#e63946";
 
-            graficoMedias = new Chart(ctxMedias, {
-                type: 'bar',
-                data: {
-                    labels: labelsMedias,
-                    datasets: [{
-                        label: 'Média',
-                        data: dadosMedias,
-                        backgroundColor: '#ff8fab',
-                        borderColor: '#d6336c',
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }]
+    // ---- GRÁFICO 1: MÉDIA POR DISCIPLINA ----
+    const ctxMedias = $("graficoMediasDisciplinas");
+    if (ctxMedias) {
+        if (graficoMedias) graficoMedias.destroy();
+
+        const labelsMedias = dadosAtuais.map((d) => d.disciplina);
+        const dadosMedias = dadosAtuais.map((d) =>
+            calcularMedia([normalizarNota(d.tri1), normalizarNota(d.tri2), normalizarNota(d.tri3)])
+        );
+
+        graficoMedias = new Chart(ctxMedias, {
+            type: "bar",
+            data: {
+                labels: labelsMedias,
+                datasets: [{
+                    label: "Média",
+                    data: dadosMedias,
+                    // média abaixo do mínimo fica em vermelho
+                    backgroundColor: dadosMedias.map((m) => (m !== null && m < REGRAS.mediaMinima ? VERMELHO : ROSA)),
+                    borderColor: ROSA_ESCURO,
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { min: 0, max: 10, grid: { color: "#ffe0e8" } },
+                    y: { grid: { display: false }, ticks: { font: { size: 10 } } }
                 },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            min: 0,
-                            max: 10,
-                            grid: { color: '#ffe0e8' }
-                        },
-                        y: {
-                            grid: { display: false },
-                            ticks: {
-                                font: { size: 10 }
-                            }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let valor = context.raw;
-                                    if (valor === null) return "Nota ainda não disponível";
-                                    return `Média: ${valor.toFixed(1).replace(".", ",")}`;
-                                }
-                            }
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ctx.raw === null
+                                ? "Nota ainda não disponível"
+                                : `Média: ${ctx.raw.toFixed(1).replace(".", ",")}`
                         }
                     }
                 }
-            });
-        }
-
-        // ----------------------------------------------------
-        // GRÁFICO 2: EVOLUÇÃO DA MÉDIA GERAL
-        // ----------------------------------------------------
-        const ctxEvolucao = document.getElementById("graficoEvolucaoTrimestres");
-        if (ctxEvolucao) {
-            if (graficoEvolucao) graficoEvolucao.destroy();
-
-            const n1s = dadosAtuais.map(d => normalizarNota(d.tri1));
-            const n2s = dadosAtuais.map(d => normalizarNota(d.tri2));
-            const n3s = dadosAtuais.map(d => normalizarNota(d.tri3));
-
-            const mediaTri1 = calcularMedia(n1s);
-            const mediaTri2 = calcularMedia(n2s);
-            const mediaTri3 = calcularMedia(n3s);
-
-            graficoEvolucao = new Chart(ctxEvolucao, {
-                type: 'line',
-                data: {
-                    labels: ["1º Tri", "2º Tri", "3º Tri"],
-                    datasets: [{
-                        label: 'Média Geral',
-                        data: [mediaTri1, mediaTri2, mediaTri3],
-                        borderColor: '#d6336c',
-                        backgroundColor: 'rgba(255, 143, 171, 0.2)',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#ff8fab',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6,
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            min: 0,
-                            max: 10,
-                            grid: { color: '#ffe0e8' }
-                        },
-                        x: {
-                            grid: { display: false }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    let valor = context.raw;
-                                    if (valor === null) return "Sem notas";
-                                    return `Média: ${valor.toFixed(1).replace(".", ",")}`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // ----------------------------------------------------
-        // GRÁFICO 3: FALTAS POR TRIMESTRE
-        // ----------------------------------------------------
-        const ctxFaltas = document.getElementById("graficoFaltasTrimestres");
-        if (ctxFaltas) {
-            if (graficoFaltas) graficoFaltas.destroy();
-
-            let faltasTri1 = 0;
-            let faltasTri2 = 0;
-            let faltasTri3 = 0;
-
-            dadosAtuais.forEach(d => {
-                if (d.faltas && Array.isArray(d.faltas)) {
-                    faltasTri1 += d.faltas[0] || 0;
-                    faltasTri2 += d.faltas[1] || 0;
-                    faltasTri3 += d.faltas[2] || 0;
-                }
-            });
-
-            const totalFaltasGeral = faltasTri1 + faltasTri2 + faltasTri3;
-            const badgePerigo = document.getElementById("estado-faltas");
-            const cardFaltas = document.getElementById("card-grafico-faltas");
-
-            if (totalFaltasGeral >= 350) {
-                badgePerigo.classList.remove("escondido");
-                cardFaltas.classList.add("perigo-ativo");
-            } else {
-                badgePerigo.classList.add("escondido");
-                cardFaltas.classList.remove("perigo-ativo");
             }
+        });
+    }
 
-            graficoFaltas = new Chart(ctxFaltas, {
-                type: 'bar',
-                data: {
-                    labels: ["1º Tri", "2º Tri", "3º Tri"],
-                    datasets: [{
-                        label: 'Faltas',
-                        data: [faltasTri1, faltasTri2, faltasTri3],
-                        backgroundColor: ['#ff8fab', '#ff8fab', '#ff8fab'],
-                        borderColor: '#d6336c',
-                        borderWidth: 1,
-                        borderRadius: 6
-                    }]
+    // ---- GRÁFICO 2: EVOLUÇÃO DA MÉDIA GERAL ----
+    const ctxEvolucao = $("graficoEvolucaoTrimestres");
+    if (ctxEvolucao) {
+        if (graficoEvolucao) graficoEvolucao.destroy();
+
+        const mediaTri = (chave) => calcularMedia(dadosAtuais.map((d) => normalizarNota(d[chave])));
+
+        graficoEvolucao = new Chart(ctxEvolucao, {
+            type: "line",
+            data: {
+                labels: ["1º Tri", "2º Tri", "3º Tri"],
+                datasets: [{
+                    label: "Média Geral",
+                    data: [mediaTri("tri1"), mediaTri("tri2"), mediaTri("tri3")],
+                    borderColor: ROSA_ESCURO,
+                    backgroundColor: "rgba(255, 143, 171, 0.2)",
+                    borderWidth: 3,
+                    pointBackgroundColor: ROSA,
+                    pointBorderColor: "#ffffff",
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { min: 0, max: 10, grid: { color: "#ffe0e8" } },
+                    x: { grid: { display: false } }
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#ffe0e8' }
-                        },
-                        x: {
-                            grid: { display: false }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.raw} faltas`;
-                                }
-                            }
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ctx.raw === null
+                                ? "Sem notas"
+                                : `Média: ${ctx.raw.toFixed(1).replace(".", ",")}`
                         }
                     }
                 }
-            });
-        }
-    }, 100);
+            }
+        });
+    }
+
+    // ---- GRÁFICO 3: FALTAS POR TRIMESTRE ----
+    const ctxFaltas = $("graficoFaltasTrimestres");
+    if (ctxFaltas) {
+        if (graficoFaltas) graficoFaltas.destroy();
+
+        const faltasTri = [0, 1, 2].map((t) =>
+            dadosAtuais.reduce((soma, d) => soma + ((d.faltas && d.faltas[t]) || 0), 0)
+        );
+
+        $("estado-faltas").classList.toggle("escondido", !emPerigo);
+        $("card-grafico-faltas").classList.toggle("perigo-ativo", emPerigo);
+
+        const maior = Math.max(...faltasTri);
+
+        graficoFaltas = new Chart(ctxFaltas, {
+            type: "bar",
+            data: {
+                labels: ["1º Tri", "2º Tri", "3º Tri"],
+                datasets: [{
+                    label: "Faltas",
+                    data: faltasTri,
+                    // o trimestre com mais faltas fica mais escuro
+                    backgroundColor: faltasTri.map((f) => (f === maior && maior > 0 ? ROSA_ESCURO : ROSA)),
+                    borderColor: ROSA_ESCURO,
+                    borderWidth: 1,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: "#ffe0e8" } },
+                    x: { grid: { display: false } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (ctx) => `${ctx.raw} faltas` } }
+                }
+            }
+        });
+    }
 }
 
 // =========================================
@@ -577,12 +602,28 @@ function atualizarGraficos() {
 document.addEventListener("DOMContentLoaded", () => {
     criarSakuras();
 
-    document.getElementById("btn-entrar").addEventListener("click", entrarComPin);
-    document.getElementById("btn-alterar").addEventListener("click", ativarEdicao);
-    document.getElementById("btn-cancelar").addEventListener("click", cancelarEdicao);
-    document.getElementById("btn-salvar").addEventListener("click", salvarAlteracoes);
+    $("btn-entrar").addEventListener("click", entrarComPin);
+    $("btn-alterar").addEventListener("click", ativarEdicao);
+    $("btn-cancelar").addEventListener("click", cancelarEdicao);
+    $("btn-salvar").addEventListener("click", salvarAlteracoes);
+    $("btn-sair").addEventListener("click", sair);
 
-    document.getElementById("input-pin").addEventListener("keydown", (e) => {
+    $("input-pin").addEventListener("keydown", (e) => {
         if (e.key === "Enter") entrarComPin();
+    });
+
+    // Atalhos na edição: Enter salva, Esc cancela
+    $("corpo-tabela").addEventListener("keydown", (e) => {
+        if (!modoEdicao) return;
+        if (e.key === "Enter") { e.preventDefault(); salvarAlteracoes(); }
+        if (e.key === "Escape") cancelarEdicao();
+    });
+
+    // Avisa antes de fechar a página com alterações não salvas
+    window.addEventListener("beforeunload", (e) => {
+        if (modoEdicao) {
+            e.preventDefault();
+            e.returnValue = "";
+        }
     });
 });
